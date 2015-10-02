@@ -1,0 +1,79 @@
+<head>
+ <title>
+  Buzzer Composer
+ </title>
+ <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <div> Play with the buzzer using keyboard. </div>
+  <br>
+  <table>
+    <tr id='inner'>
+    </tr>
+  </table>
+  
+  <br>
+  <form action="api/upload" method="post" enctype="multipart/form-data">
+    <input style="display:inline" type="file" name="midi" accept=".mid">
+    <button class="btn btn-default btn-xs" type="submit">Upload</button>
+  </form>
+  <!--button class='btn btn-primary btn-xs' id="submit"> Submit MIDI File</button-->
+  
+  <button class='btn btn-default btn-xs' id='play'> Play</button>
+  
+  <style>
+    table, th, td { 
+      border: 1px solid black; 
+      border-collapse: collapse;
+      font-family: "Courier New", Courier, monospace;
+    } 
+    th, td { padding:3px; }
+  </style>
+  <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+  <script>
+    var socket = io();
+    function play(id,ch) {
+      socket.emit('note', id);
+      $( "#inner" ).append( "<td>"+ch+"</td>" );
+    }
+    socket.on('message',function(msg){
+      console.log('Browser recv:'+msg);
+    })
+    $('#play').click(function(){
+        socket.emit('play');
+    });
+    $(document).keydown(function(event){
+        var key = event.which;
+        console.log(key);
+        switch(key){
+            case 65: play(60,'C'); break;
+            case 83: play(62,'D'); break;
+            case 68: play(64,'E'); break;
+            case 70: play(65,'F'); break;
+            case 71: play(67,'G'); break;
+            case 32:
+                console.log('expand');
+                $('td:last-child').each(function() {
+                    var cellText = $(this).html();    
+                    console.log(cellText);
+                    $(this).html(cellText+'-');
+                });
+                socket.emit('note', -1);
+            break;
+            case 13: 
+                console.log('space');
+                $( "#inner" ).append( "<td>*</td>" );
+                socket.emit('note', 0);
+            break;
+            case 37: 
+                console.log('del');
+                $('td:last-child', this).remove();
+                socket.emit('note', -2);
+            break;
+        }
+    });
+   </script>
+</body>
+
